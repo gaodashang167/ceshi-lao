@@ -11,5 +11,7 @@ RUN apk update && apk upgrade &&\
     apk add --no-cache bash &&\
     chmod +x index.js &&\
     npm install
+# 复制配置
+COPY nginx.conf /etc/nginx/nginx.conf
 
 CMD ["node", "index.js"]
