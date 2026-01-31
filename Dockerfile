@@ -1,23 +1,33 @@
+# 使用官方 Node.js 镜像作为基础镜像
 FROM node:20-alpine3.20
 
+# 设置工作目录
 WORKDIR /app
 
-RUN apk update && apk add --no-cache \
+# 安装必要的系统依赖
+RUN apk add --no-cache \
     bash \
-    openssl \
     curl \
-    wget \
-    unzip \
-    nginx \
     ca-certificates
 
-# nginx 配置
-COPY nginx.conf /etc/nginx/nginx.conf
+# 复制 package.json 和 package-lock.json（如果存在）
+COPY package*.json ./
 
-# 代码
-COPY . .
+# 安装项目依赖
+RUN npm install --production
 
-EXPOSE 8080
+# 复制应用代码
+COPY index.js ./
+
+# 创建临时文件目录
+RUN mkdir -p /tmp
+
+# 暴露端口（默认 3000，可通过环境变量修改）
 EXPOSE 3000
 
-CMD sh -c "nginx -g 'daemon off;' & node index.js"
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# 启动应用
+CMD ["node", "index.js"]
