@@ -1,17 +1,23 @@
-FROM node:alpine3.20
+FROM node:20-alpine3.20
 
-WORKDIR .npm
+WORKDIR /app
 
-COPY . .
+RUN apk update && apk add --no-cache \
+    bash \
+    openssl \
+    curl \
+    wget \
+    unzip \
+    nginx \
+    ca-certificates
 
-EXPOSE 3000/tcp
-
-RUN apk update && apk upgrade &&\
-    apk add --no-cache openssl curl gcompat iproute2 coreutils &&\
-    apk add --no-cache bash &&\
-    chmod +x index.js &&\
-    npm install
-# 复制配置
+# nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
 
-CMD ["node", "index.js"]
+# 代码
+COPY . .
+
+EXPOSE 8080
+EXPOSE 3000
+
+CMD sh -c "nginx -g 'daemon off;' & node index.js"
